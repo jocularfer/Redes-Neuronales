@@ -12,6 +12,8 @@ def bagging_het(X_train, y_train, T, estimators, X_test):
     La estimación final usando los modelos entrenados se
     realiza por mayoría de votos.
 
+    Basado en 
+
     Parámetros:
     -----------
     X_train : DataFrame
@@ -41,23 +43,27 @@ def bagging_het(X_train, y_train, T, estimators, X_test):
         Lista con los índices no repetidos de las observaciones
         excluidad en cada muestra bootstrap
     """
-    trained_models = []
+
+    trained_model = []
     yhat_test = np.zeros((X_test.shape[0], T))
     idx_oob = []
-    for t in range(T):
+    for t in np.arange(0, T):
         sa1 = X_train.sample(n=X_train.shape[0], replace=True)
-        idx_oob = list(set(idx_oob + list(set(X_train.index) - set(sa1.index))))
+
+        idx_oob = list(set(idx_oob + list(set(X_train.index)-set(sa1.index))))
         
         idx_estimator = np.random.randint(0, len(estimators))
-        estimator = estimators[idx_estimator][1]  # Seleccionar solo el estimador de la tupla
+        estimator = estimators[idx_estimator]
+        #print(idx_estimator, end='; ')
+        
         estimator.fit(sa1, y_train[sa1.index])
-        trained_models.append(estimator)
-        yhat_test[:, t] = estimator.predict(X_test)
+        trained_model.append(estimator)
+
+        yhat_test[:,t] = estimator.predict(X_test)
      
     yhat_out = pd.Series(data=mode(yhat_test, axis=1)[0], name='yhat')
         
-    return trained_models, yhat_test, yhat_out, idx_oob
-
+    return trained_model, yhat_test, yhat_out, idx_oob
 
 
 def bagging_het_predict(X, estimators):
